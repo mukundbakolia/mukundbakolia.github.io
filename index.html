@@ -1,1 +1,325 @@
-<h1> This is a Test Page </h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maternity Benefit Eligibility Calculator</title>
+    <style>
+        /* CSS starts here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            margin: 20px; /* Add some margin around the container */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input[type="date"],
+        .input-group select {
+            width: calc(100% - 20px); /* Adjust for padding */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result-box {
+            background-color: #e9f7ef;
+            border: 1px solid #cce5d4;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 30px;
+            color: #333;
+        }
+
+        .result-box h2 {
+            color: #28a745;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .result-box p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .disclaimer {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #856404;
+        }
+
+        .disclaimer h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        /* CSS ends here */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Maternity Benefit Eligibility Calculator</h1>
+
+        <div class="input-group">
+            <label for="dateOfJoining">Date of Joining:</label>
+            <input type="date" id="dateOfJoining" required>
+        </div>
+
+        <div class="input-group">
+            <label for="scenarioType">Scenario:</label>
+            <select id="scenarioType" required>
+                <option value="">Select...</option>
+                <option value="delivery">Normal Delivery</option>
+                <option value="miscarriage">Miscarriage/Medical Termination of Pregnancy</option>
+            </select>
+        </div>
+
+        <div class="input-group" id="deliveryDateGroup">
+            <label for="expectedDeliveryDate">Expected Delivery Date (EDD):</label>
+            <input type="date" id="expectedDeliveryDate">
+        </div>
+
+        <div class="input-group" id="miscarriageDateGroup" style="display:none;">
+            <label for="miscarriageDate">Date of Miscarriage/MTP:</label>
+            <input type="date" id="miscarriageDate">
+        </div>
+
+        <div class="input-group" id="numChildrenGroup">
+            <label for="numChildren">Number of Living Children (for Normal Delivery):</label>
+            <select id="numChildren">
+                <option value="">Select...</option>
+                <option value="1">1st Child</option>
+                <option value="2">2nd Child</option>
+                <option value="3">3rd Child or more</option>
+            </select>
+        </div>
+
+        <button id="calculateBtn">Calculate Eligibility</button>
+
+        <div class="result-box">
+            <h2>Calculation Results:</h2>
+            <p id="eligibilityResult">Fill in the details above and click 'Calculate'.</p>
+            <p id="leaveDurationResult"></p>
+            <p id="preDeliveryLeave"></p>
+            <p id="postDeliveryLeave"></p>
+            <p id="joiningEligibilityDate"></p>
+        </div>
+
+        <div class="disclaimer">
+            <h3>Disclaimer:</h3>
+            <p>This calculator provides an estimate based on the Maternity Benefit (Amendment) Act, 2017 in India. It does not account for all individual circumstances, company policies, or potential future legislative changes. For official information and precise calculations, please consult with HR, legal counsel, or the relevant government authorities. This calculator assumes continuous employment during the 12 months preceding EDD/miscarriage date.</p>
+        </div>
+    </div>
+
+    <script>
+        /* JavaScript starts here */
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateOfJoiningInput = document.getElementById('dateOfJoining');
+            const scenarioTypeSelect = document.getElementById('scenarioType');
+            const expectedDeliveryDateInput = document.getElementById('expectedDeliveryDate');
+            const miscarriageDateInput = document.getElementById('miscarriageDate');
+            const numChildrenSelect = document.getElementById('numChildren');
+            const calculateBtn = document.getElementById('calculateBtn');
+
+            const deliveryDateGroup = document.getElementById('deliveryDateGroup');
+            const miscarriageDateGroup = document.getElementById('miscarriageDateGroup');
+            const numChildrenGroup = document.getElementById('numChildrenGroup');
+
+            const eligibilityResult = document.getElementById('eligibilityResult');
+            const leaveDurationResult = document.getElementById('leaveDurationResult');
+            const preDeliveryLeave = document.getElementById('preDeliveryLeave');
+            const postDeliveryLeave = document.getElementById('postDeliveryLeave');
+            const joiningEligibilityDate = document.getElementById('joiningEligibilityDate');
+
+            // Toggle visibility of date inputs based on scenario selection
+            scenarioTypeSelect.addEventListener('change', () => {
+                if (scenarioTypeSelect.value === 'delivery') {
+                    deliveryDateGroup.style.display = 'block';
+                    numChildrenGroup.style.display = 'block';
+                    miscarriageDateGroup.style.display = 'none';
+                    miscarriageDateInput.removeAttribute('required'); // Remove required for hidden field
+                    expectedDeliveryDateInput.setAttribute('required', 'required'); // Add required for visible field
+                    numChildrenSelect.setAttribute('required', 'required');
+                } else if (scenarioTypeSelect.value === 'miscarriage') {
+                    deliveryDateGroup.style.display = 'none';
+                    numChildrenGroup.style.display = 'none';
+                    miscarriageDateGroup.style.display = 'block';
+                    expectedDeliveryDateInput.removeAttribute('required'); // Remove required for hidden field
+                    numChildrenSelect.removeAttribute('required');
+                    miscarriageDateInput.setAttribute('required', 'required'); // Add required for visible field
+                } else {
+                    deliveryDateGroup.style.display = 'none';
+                    numChildrenGroup.style.display = 'none';
+                    miscarriageDateGroup.style.display = 'none';
+                    expectedDeliveryDateInput.removeAttribute('required');
+                    miscarriageDateInput.removeAttribute('required');
+                    numChildrenSelect.removeAttribute('required');
+                }
+                // Clear results when scenario changes
+                eligibilityResult.textContent = 'Fill in the details above and click \'Calculate\'.';
+                eligibilityResult.style.color = '#333';
+                leaveDurationResult.textContent = '';
+                preDeliveryLeave.textContent = '';
+                postDeliveryLeave.textContent = '';
+                joiningEligibilityDate.textContent = '';
+            });
+
+            calculateBtn.addEventListener('click', () => {
+                const dateOfJoining = new Date(dateOfJoiningInput.value);
+                const scenario = scenarioTypeSelect.value;
+
+                // Clear previous results
+                eligibilityResult.textContent = '';
+                leaveDurationResult.textContent = '';
+                preDeliveryLeave.textContent = '';
+                postDeliveryLeave.textContent = '';
+                joiningEligibilityDate.textContent = '';
+
+                if (!dateOfJoiningInput.value || !scenario) {
+                    eligibilityResult.textContent = 'Please fill in all the required fields.';
+                    return;
+                }
+
+                let referenceDate; // This will be EDD or Miscarriage Date
+                let numChildren;
+
+                if (scenario === 'delivery') {
+                    if (!expectedDeliveryDateInput.value || isNaN(parseInt(numChildrenSelect.value))) {
+                        eligibilityResult.textContent = 'Please fill in Expected Delivery Date and Number of Children.';
+                        return;
+                    }
+                    referenceDate = new Date(expectedDeliveryDateInput.value);
+                    numChildren = parseInt(numChildrenSelect.value);
+                } else if (scenario === 'miscarriage') {
+                    if (!miscarriageDateInput.value) {
+                        eligibilityResult.textContent = 'Please fill in Date of Miscarriage/MTP.';
+                        return;
+                    }
+                    referenceDate = new Date(miscarriageDateInput.value);
+                } else {
+                    eligibilityResult.textContent = 'Please select a scenario.';
+                    return;
+                }
+
+                // Calculate 12 months preceding referenceDate (EDD or Miscarriage Date)
+                const twelveMonthsBeforeReferenceDate = new Date(referenceDate);
+                twelveMonthsBeforeReferenceDate.setFullYear(twelveMonthsBeforeReferenceDate.getFullYear() - 1);
+
+                // Calculate minimum joining date for 80 days of work
+                const minJoiningDateForEligibility = new Date(referenceDate);
+                minJoiningDateForEligibility.setDate(minJoiningDateForEligibility.getDate() - 80);
+
+                let isEligibleFor80Days = false;
+                if (dateOfJoining <= minJoiningDateForEligibility) {
+                    isEligibleFor80Days = true;
+                }
+
+                // Check if Date of Joining is within 12 months preceding referenceDate for general employment context
+                const isEmployedForRelevantPeriod = dateOfJoining <= referenceDate;
+
+                if (!isEmployedForRelevantPeriod) {
+                    eligibilityResult.textContent = `Eligibility: NOT ELIGIBLE. Date of joining is after the ${scenario === 'delivery' ? 'expected delivery date' : 'date of miscarriage/MTP'}.`;
+                    eligibilityResult.style.color = 'red';
+                    return;
+                }
+
+                if (!isEligibleFor80Days) {
+                    eligibilityResult.textContent = `Eligibility: NOT ELIGIBLE. Employee needs to have worked for at least 80 days in the 12 months immediately preceding the ${scenario === 'delivery' ? 'expected delivery date' : 'date of miscarriage/MTP'}. Based on your joining date, this condition is not met. (Minimum joining date for eligibility would have been ${minJoiningDateForEligibility.toLocaleDateString()})`;
+                    eligibilityResult.style.color = 'red';
+                    return;
+                }
+
+                // If all checks pass for 80 days
+                eligibilityResult.textContent = 'Eligibility: ELIGIBLE for Maternity Benefit!';
+                eligibilityResult.style.color = 'green';
+                joiningEligibilityDate.textContent = `(Assuming continuous employment, you joined on or before ${minJoiningDateForEligibility.toLocaleDateString()} to meet the 80-day criteria)`;
+
+
+                let totalLeaveWeeks;
+                let preDeliveryWeeks = 0; // Default to 0 for miscarriage
+                let postDeliveryWeeks = 0; // Default to 0 for miscarriage
+
+                if (scenario === 'delivery') {
+                    if (numChildren === 1 || numChildren === 2) {
+                        totalLeaveWeeks = 26;
+                        preDeliveryWeeks = 8;
+                        postDeliveryWeeks = 18;
+                    } else if (numChildren === 3) {
+                        totalLeaveWeeks = 12;
+                        preDeliveryWeeks = 6;
+                        postDeliveryWeeks = 6;
+                    } else {
+                        // This case should ideally not happen due to select options
+                        eligibilityResult.textContent = 'Please select a valid number of children for normal delivery.';
+                        eligibilityResult.style.color = 'red';
+                        return;
+                    }
+                    leaveDurationResult.textContent = `Total Paid Maternity Leave: ${totalLeaveWeeks} weeks`;
+                    preDeliveryLeave.textContent = `Maximum Leave Before EDD: ${preDeliveryWeeks} weeks`;
+                    postDeliveryLeave.textContent = `Leave After Delivery: ${postDeliveryWeeks} weeks`;
+
+                } else if (scenario === 'miscarriage') {
+                    totalLeaveWeeks = 6; // 6 weeks for miscarriage/MTP
+                    leaveDurationResult.textContent = `Total Paid Leave for Miscarriage/MTP: ${totalLeaveWeeks} weeks`;
+                    preDeliveryLeave.textContent = ''; // Not applicable
+                    postDeliveryLeave.textContent = `Leave immediately following miscarriage/MTP: ${totalLeaveWeeks} weeks`;
+                }
+            });
+        });
+        /* JavaScript ends here */
+    </script>
+</body>
+</html>
